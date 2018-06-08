@@ -1,17 +1,17 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = "loowy"
-version = "0.2.1-1"
+version = "0.3.1-1"
 
 -- LuaDist source
 source = {
-  tag = "0.2.1-1",
+  tag = "0.3.1-1",
   url = "git://github.com/LuaDist-testing/loowy.git"
 }
 -- Original source
 -- source = {
 --     url = "git://github.com/KSDaemon/Loowy.git",
---     tag = "v0.2.1"
+--     tag = "v0.3.1"
 -- }
 
 description = {

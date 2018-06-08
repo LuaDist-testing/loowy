@@ -27,9 +27,11 @@ end
 local printdump = require("loowy.vardump").printdump
 local ev = require 'ev'
 local loowy = require 'loowy.client'
+
 local client1
 
 print('Connecting client to WAMP Server: ' .. wsServer)
+
 client1 = loowy.new(wsServer, {
     transportEncoding = 'json',
     realm = config.realm,
@@ -54,22 +56,22 @@ client1 = loowy.new(wsServer, {
             end
         })
 
-        local unsubscribeTimer
-        unsubscribeTimer = ev.Timer.new(function()
-            unsubscribeTimer:stop(ev.Loop.default)
-            print('Unsubscribing from topic.test1')
-            client1:unsubscribe('topic.test1', {
-                onSuccess = function()
-                    print('Got to unsubscribe from topic topic.test1 onSuccess')
-                    print('Disconnecting from WAMP Server')
-                    client1:disconnect()
-                end,
-                onError = function(err)
-                    print('Got to unsubscribe from topic topic.test1 onError: ' .. err.error)
-                end
-            })
-        end, 5)
-        unsubscribeTimer:start(ev.Loop.default)
+        print('Registering new RPC rpc.test1')
+        client1:register('rpc.test1', {
+            rpc = function(data)
+                print('Invoked rpc.test1')
+                print('RPC payload')
+                printdump(data)
+
+                return { argsList = data.argsList, argsDict = data.argsDict }
+            end,
+            onSuccess = function()
+                print('Got to register rpc rpc.test1 onSuccess')
+            end,
+            onError = function(err)
+                print('Got to register rpc rpc.test1 onError: ' .. err.error)
+            end
+        })
     end,
     onClose = function()
         print('Got to WAMP Client instance onClose callback')

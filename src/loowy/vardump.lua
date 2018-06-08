@@ -1,5 +1,5 @@
 --
--- Project: wiola
+-- Project: Loowy
 -- User: Konstantin Burkalev
 -- Date: 16.03.14
 --
@@ -27,7 +27,7 @@ local function printdump(value, depth, key)
     if depth == nil then
         depth = 0
     else
-        for i = 1, depth do spaces = spaces .. '  ' end
+        for _ = 1, depth do spaces = spaces .. '  ' end
         depth = depth + 1
         spaces = spaces .. ' » '
     end
@@ -78,7 +78,7 @@ local function getdump(value, depth, key)
     if depth == nil then
         depth = 0
     else
-        for i = 1, depth do spaces = spaces .. '  ' end
+        for _ = 1, depth do spaces = spaces .. '  ' end
         depth = depth + 1
         spaces = spaces .. ' » '
     end
