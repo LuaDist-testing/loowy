@@ -13,7 +13,7 @@
 --local printdump = require("loowy.vardump").printdump
 
 local _M = {
-    _VERSION = '0.3.1'
+    _VERSION = '0.4.0'
 }
 
 -- _M.__index = _M -- I think no needed
@@ -111,7 +111,6 @@ local WAMP_ERROR_MSG = {
 --- @param opts table Configuration options (optional)
 ---------------------------------------------------
 function _M.new(url, opts)
-    -- local loowy = setmetatable({}, Loowy)
     local loowy = {}
 
     ---------------------------------------------------
@@ -361,7 +360,7 @@ function _M.new(url, opts)
     --- @param uri string uri to validate
     --- @param patternBased boolean allow wamp pattern based syntax or no
     --- @param allowWAMP boolean allow wamp special prefixed uris or no
-    --- @return boolean if uri valid?
+    --- @return boolean is uri valid?
     ---------------------------------------------------
     local function _validateURI(uri, patternBased, allowWAMP)
         -- TODO create something like /^([0-9a-z_]+\.)*([0-9a-z_]+)$/
@@ -615,7 +614,44 @@ function _M.new(url, opts)
 
         elseif data[1] == WAMP_MSG_SPEC.CHALLENGE then
             -- WAMP SPEC: [CHALLENGE, AuthMethod|string, Extra|dict]
-            -- TODO implement CRA
+            if (options.authid ~= nil and type(options.onChallenge) == 'function') then
+
+                local status, result = pcall(options.onChallenge, data[2], data[3])
+                if status then
+                    local msg = { WAMP_MSG_SPEC.AUTHENTICATE, result, {}}
+                    ws:send(_encode(msg), options.transportType)
+                else
+                    local msg = {
+                        WAMP_MSG_SPEC.ABORT,
+                        { message = 'Exception in onChallenge handler raised!' } ,
+                        'wamp.error.cannot_authenticate'
+                    }
+                    ws:send(_encode(msg), options.transportType)
+
+                    if type(options.onError) == 'function' then
+                        options.onError({ error = WAMP_ERROR_MSG.CRA_EXCEPTION.description })
+                    end
+
+                    ws:close()
+                    ws = nil
+                    cache.opStatus = WAMP_ERROR_MSG.CRA_EXCEPTION;
+                end
+            else
+                local msg = {
+                    WAMP_MSG_SPEC.ABORT,
+                    { message = WAMP_ERROR_MSG.NO_CRA_CB_OR_ID.description } ,
+                    'wamp.error.cannot_authenticate'
+                }
+                ws:send(_encode(msg), options.transportType)
+
+                if type(options.onError) == 'function' then
+                    options.onError({ error = WAMP_ERROR_MSG.NO_CRA_CB_OR_ID.description })
+                end
+
+                ws:close()
+                ws = nil
+                cache.opStatus = WAMP_ERROR_MSG.NO_CRA_CB_OR_ID;
+            end
 
         elseif data[1] == WAMP_MSG_SPEC.GOODBYE then
             -- WAMP SPEC: [GOODBYE, Details|dict, Reason|uri]
@@ -1582,32 +1618,36 @@ function _M.new(url, opts)
 
         if type(advancedOptions) == 'table' then
 
-            if type(advancedOptions.match) == 'string' then
+            if advancedOptions.match ~= nil then
+                if type(advancedOptions.match) == 'string' then
 
-                if string.find(advancedOptions.mode, '^prefix$') or
-                        string.find(advancedOptions.mode, '^wildcard$') then
-                    registerOptions.match = advancedOptions.match
-                    patternBased = true
+                    if string.find(advancedOptions.match, '^prefix$') or
+                            string.find(advancedOptions.match, '^wildcard$') then
+                        registerOptions.match = advancedOptions.match
+                        patternBased = true
+                    else
+                        err = true
+                    end
                 else
                     err = true
                 end
-            else
-                err = true
             end
 
-            if type(advancedOptions.invoke) == 'string' then
+            if advancedOptions.invoke ~= nil then
+                if type(advancedOptions.invoke) == 'string' then
 
-                if string.find(advancedOptions.invoke, '^single$') or
-                        string.find(advancedOptions.invoke, '^roundrobin$') or
-                        string.find(advancedOptions.invoke, '^random$') or
-                        string.find(advancedOptions.invoke, '^first$') or
-                        string.find(advancedOptions.invoke, '^last$') then
-                    registerOptions.invoke = advancedOptions.invoke
+                    if string.find(advancedOptions.invoke, '^single$') or
+                            string.find(advancedOptions.invoke, '^roundrobin$') or
+                            string.find(advancedOptions.invoke, '^random$') or
+                            string.find(advancedOptions.invoke, '^first$') or
+                            string.find(advancedOptions.invoke, '^last$') then
+                        registerOptions.invoke = advancedOptions.invoke
+                    else
+                        err = true
+                    end
                 else
                     err = true
                 end
-            else
-                err = true
             end
 
             if err then

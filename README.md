@@ -72,7 +72,6 @@ You can install Loowy via luarocks
 
 ```bash
 > luarocks install loowy 
-
 ```
 
 or simply put loowy/client.lua somewhere accessible by lua package.path. 
@@ -117,9 +116,9 @@ Options keys description:
 Loowy will try to reconnect to WAMP server, and if you were subscribed to any topics,
 or had registered some procedures, Loowy will resubscribe to that topics and reregister procedures.
 * **reconnectInterval**. Default value: 2(s). Reconnection Interval in seconds.
-* **maxRetries**. Default value: 25. Max reconnection attempts. After reaching this value [disconnect()](#disconnect)
+* **maxRetries**. Default value: 25. Max reconnection attempts. After reaching this value [disconnect()](#disconnect) 
 will be called.
-* **transportEncoding**. Default value: json. Transport serializer to use. Supported 2 values: "json"|"msgpack".
+* **transportEncoding**. Default value: json. Transport serializer to use. Supported 2 values: "json"/"msgpack".
 * **realm**. Default value: nil. WAMP Realm to join on server. See WAMP spec for additional info.
 * **helloCustomDetails**. Default value: nil. Custom attributes to send to router on hello.
 * **authid**. Default value: nil. Authentication (user) id to use in challenge.
@@ -185,7 +184,24 @@ but WAMP session establishment is in progress.
 Challenge Response Authentication
 ------------------------------------------
 
-TBD
+Loowy supports challenge response authentication. To use it you need to provide authid and onChallenge callback
+as instance options. See example below:
+
+```lua
+local loowy = require 'loowy.client'
+
+local client = loowy.new("ws://ws.wamp.server.url", {
+    transportEncoding = 'json',
+    realm = 'AppRealm',
+    authid = 'user1',
+    authmethods = { 'wampcra' },
+    onChallenge = function (method, info)
+        local hmac = require "resty.hmac"
+        local hm = hmac:new("secret1")
+        return hm:generate_signature("sha256", info.challenge)
+    end
+})
+```
 
 [Back to TOC](#table-of-contents)
 
@@ -209,7 +225,7 @@ it can be hash table of callbacks:
         * **argsDict**: object payload (may be omitted)
         * **details**: some publication options object. 
 * **advancedOptions**. Optional parameters hash table. Must include any or all of the options:
-    * **match**: string matching policy ("prefix"|"wildcard")
+    * **match**: string matching policy ("prefix"/"wildcard")
 
 [Back to TOC](#table-of-contents)
 
@@ -321,7 +337,7 @@ Parameters:
     * **onSuccess**: will be called if successfully sent canceling message 
     * **onError**: will be called if some error occurred 
 * **advancedOptions**. Optional parameters hash table. Must include any or all of the options:
-    * **mode**: string|one of the possible modes: "skip" | "kill" | "killnowait". Skip is default. 
+    * **mode**: string|one of the possible modes: "skip"/"kill"/"killnowait". Skip is default. 
 
 [Back to TOC](#table-of-contents)
 
@@ -342,8 +358,8 @@ Must meet a WAMP Spec URI requirements.
         * **error**: string error description
         * **details**: hash-table with some error details
 * **advancedOptions**. Optional parameters hash table. Must include any or all of the options:
-    * **match**: string matching policy ("prefix"|"wildcard")
-    * **invoke**: string invocation policy ("single"|"roundrobin"|"random"|"first"|"last")
+    * **match**: string matching policy ("prefix"/"wildcard")
+    * **invoke**: string invocation policy ("single"/"roundrobin"/"random"/"first"/"last")
 
 Registered PRC during invocation will receive one hash-table argument with following attributes:
  
@@ -388,14 +404,11 @@ RPC unregistration for invocations.
 
 Parameters:
 
-* topicURI - topic to unregister
-* callbacks - optional parameter. If it is a function, it will be called on successful unregistration 
+* **topicURI** - topic to unregister
+* **callbacks** - optional parameter. If it is a function, it will be called on successful unregistration 
             or it can be hash table of callbacks:
-
-    { 
-        onSuccess: will be called on successful unregistration
-        onError: will be called if unregistration would be aborted 
-    }
+    * **onSuccess**: will be called on successful unregistration
+    * **onError**: will be called if unregistration would be aborted 
 
 [Back to TOC](#table-of-contents)
 
