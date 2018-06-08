@@ -1,10 +1,18 @@
-package = "Loowy"
-version = "0.2.0-1"
+-- This file was automatically generated for the LuaDist project.
 
+package = "loowy"
+version = "0.2.0-2"
+
+-- LuaDist source
 source = {
-    url = "git://github.com/KSDaemon/Loowy.git",
-    tag = "v0.2.0"
+  tag = "0.2.0-2",
+  url = "git://github.com/LuaDist-testing/loowy.git"
 }
+-- Original source
+-- source = {
+--     url = "git://github.com/KSDaemon/Loowy.git",
+--     tag = "v0.2.0"
+-- }
 
 description = {
     summary = "LUA WAMP client",
@@ -29,7 +37,7 @@ build = {
     install = {
         lua = {
             ['loowy.client'] = 'src/loowy/client.lua',
-            ['loowy.vardump'] = 'src/debug/vardump.lua'
+            ['loowy.vardump'] = 'src/loowy/vardump.lua'
 
         }
     }
